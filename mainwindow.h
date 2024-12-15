@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include "servicetable.h"
+#include "thememanager.h"
 
 #include <QMainWindow>
 #include <QTableWidget>
@@ -24,10 +25,13 @@ private slots:
     void saveToFile();
     void loadFromFile();
     void aboutProgram();
+    void changeTheme();
 
 private:
     ServiceTable *table;
     bool isModified;
+    ThemeManager themeManager;
+    QString currentTheme;
 
     void setupMenu();
     void setupToolbar();

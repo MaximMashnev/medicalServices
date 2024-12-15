@@ -32,6 +32,8 @@ void MainWindow::setupMenu() {
     fileMenu->addAction("Открыть таблицу", this, &MainWindow::loadFromFile);
     fileMenu->addAction("Сохранить таблицу", this, &MainWindow::saveToFile);
     fileMenu->addSeparator();
+    fileMenu->addAction("Сменить тему", this, &MainWindow::changeTheme);
+    fileMenu->addSeparator();
     fileMenu->addAction("Выход", this, &QMainWindow::close);
 
     QMenu *helpMenu = menuBar()->addMenu("Справка");
@@ -110,8 +112,6 @@ void MainWindow::removeService() {
         if (reply == QMessageBox::Yes) {
             table->removeRow(row);
             isModified = true;
-        } else if (reply == QMessageBox::No) {
-            isModified = false;
         }
     } else {
         QMessageBox::warning(this, "Ошибка", "Выберите услугу для удаления.");
@@ -173,18 +173,40 @@ void MainWindow::aboutProgram() {
     QMessageBox::information(this, "О программе", aboutText);
 }
 
+void MainWindow::changeTheme() {
+    if (themeManager.currentTheme() == ThemeManager::Light) {
+        themeManager.setTheme(ThemeManager::Dark);
+    } else {
+        themeManager.setTheme(ThemeManager::Light);
+    }
+
+    setStyleSheet(themeManager.styleSheetForMainWindow());
+    table->setStyleSheet(themeManager.styleSheetForTable());
+    menuBar()->setStyleSheet(themeManager.styleSheetForMenuBar());
+
+    QList<QPushButton *> buttons = findChildren<QPushButton *>();
+    for (QPushButton *button : buttons) {
+        button->setStyleSheet(themeManager.styleSheetForButtons());
+    }
+    QList<QMessageBox *> messageBoxes = findChildren<QMessageBox *>();
+    for (QMessageBox *msgBox : messageBoxes) {
+        msgBox->setStyleSheet(themeManager.styleSheetForMessageBox());
+    }
+}
 
 void MainWindow::closeEvent(QCloseEvent *event) {
     if (isModified) {
-        auto reply = QMessageBox::question(this, "Выход", "Вы хотите сохранить изменения перед выходом?");
+        auto reply = QMessageBox::question(this, "Выход", "Вы хотите сохранить изменения перед выходом?",
+                                           QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
         if (reply == QMessageBox::Yes) {
             saveToFile();
-        } else if (reply == QMessageBox::Cancel) {
+        } else if (reply == QMessageBox::No) {
+            event->accept();
+        } else if(reply == QMessageBox::Cancel){
             event->ignore();
             return;
         }
     }
-    event->accept();
 }
 
 bool MainWindow::validateFields(const QString &name, const QString &specialist, double price, const QTime &time) {
